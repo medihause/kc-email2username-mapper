@@ -20,10 +20,7 @@ import java.util.*;
 public class EmailToUsernameMapper extends AbstractIdentityProviderMapper {
 
     public static final String PROVIDER_ID = "oidc-email-to-username-mapper";
-    public static final String[] COMPATIBLE_PROVIDERS = {
-            KeycloakOIDCIdentityProviderFactory.PROVIDER_ID,
-            OIDCIdentityProviderFactory.PROVIDER_ID
-    };
+    public static final String[] COMPATIBLE_PROVIDERS = {"*"};
 
     private static final Set<IdentityProviderSyncMode> IDENTITY_PROVIDER_SYNC_MODES = new HashSet<>(Arrays.asList(IdentityProviderSyncMode.values()));
 
