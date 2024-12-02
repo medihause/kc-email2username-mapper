@@ -15,11 +15,11 @@ import org.keycloak.broker.oidc.OIDCIdentityProvider;
 import java.util.*;
 
 /**
- * Maps email from OIDC provider to username by stripping domain and adding random hex
+ * Maps email from any identity provider to username by stripping domain and adding random hex
  */
 public class EmailToUsernameMapper extends AbstractIdentityProviderMapper {
 
-    public static final String PROVIDER_ID = "oidc-email-to-username-mapper";
+    public static final String PROVIDER_ID = "email-to-username-mapper";
     public static final String[] COMPATIBLE_PROVIDERS = {"*"};
 
     private static final Set<IdentityProviderSyncMode> IDENTITY_PROVIDER_SYNC_MODES = new HashSet<>(Arrays.asList(IdentityProviderSyncMode.values()));
@@ -51,18 +51,25 @@ public class EmailToUsernameMapper extends AbstractIdentityProviderMapper {
 
     @Override
     public String getHelpText() {
-        return "Creates a username from email by stripping domain part and adding random hex characters";
+        return "Creates a username from email by stripping domain part and adding random hex characters. Works with any identity provider that supplies an email.";
     }
 
     @Override
     public void importNewUser(KeycloakSession session, RealmModel realm, UserModel user, IdentityProviderMapperModel mapperModel, BrokeredIdentityContext context) {
-        String email = (String) context.getContextData().get(OIDCIdentityProvider.USER_INFO + ".email");
+        String email = context.getEmail();
         if (email != null && !email.isEmpty()) {
-            String localPart = email.split("@")[0];
-            String randomHex = UUID.randomUUID().toString().substring(0, 4);
-            String newUsername = localPart + randomHex;
-
-            user.setUsername(newUsername);
+            try {
+                String[] parts = email.split("@");
+                if (parts.length > 0) {
+                    String localPart = parts[0];
+                    String randomHex = UUID.randomUUID().toString().substring(0, 4);
+                    String newUsername = localPart + randomHex;
+                    user.setUsername(newUsername);
+                }
+            } catch (Exception e) {
+                // If there's any error in processing, log it but don't break the flow
+                System.err.println("Error processing email for username: " + e.getMessage());
+            }
         }
     }
 
